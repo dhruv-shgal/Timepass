@@ -8,7 +8,7 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 @router.post("/register", response_model=schemas.Token)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """Register new user"""
-    # Check if user exists
+    # Check if user exists via email
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(
@@ -18,7 +18,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     # Hash password and create user
     hashed_password = auth.hash_password(user.password)
-    db_user = models.User(email=user.email, password_hash=hashed_password)
+    db_user = models.User(username=user.username,email=user.email, password_hash=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
