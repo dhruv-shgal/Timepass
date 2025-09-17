@@ -683,15 +683,57 @@ const AuthModal = ({ onClose, onNavigate }) => {
   const [identifier, setIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const { setUser } = useAppStore();
+
+  const clearForm = () => {
+    setUsername('');
+    setIdentifier('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setErrors({});
+  };
+
+  const handleToggleMode = () => {
+    setIsSignUp(!isSignUp);
+    clearForm();
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (isSignUp) {
+      if (!username.trim()) newErrors.username = 'Username is required';
+      if (!email.trim()) newErrors.email = 'Email is required';
+      else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+      if (!password) newErrors.password = 'Password is required';
+      else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+      if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
+      else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    } else {
+      if (!identifier.trim()) newErrors.identifier = 'Username or email is required';
+      if (!password) newErrors.password = 'Password is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
+    setErrors({});
     
     try {
       // Import dynamically to avoid circular dependencies
@@ -755,8 +797,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="your_username"
-                      required
+                      className={errors.username ? 'border-red-500' : ''}
                     />
+                    {errors.username && (
+                      <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -767,8 +812,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      required
+                      className={errors.email ? 'border-red-500' : ''}
                     />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                    )}
                   </div>
                 </>
               ) : (
@@ -781,8 +829,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder="username or you@example.com"
-                    required
+                    className={errors.identifier ? 'border-red-500' : ''}
                   />
+                  {errors.identifier && (
+                    <p className="text-red-500 text-sm mt-1">{errors.identifier}</p>
+                  )}
                 </div>
               )}
               <div>
@@ -794,9 +845,29 @@ const AuthModal = ({ onClose, onNavigate }) => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
+                  className={errors.password ? 'border-red-500' : ''}
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
+              {isSignUp && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Confirm Password
+                  </label>
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={errors.confirmPassword ? 'border-red-500' : ''}
+                  />
+                  {errors.confirmPassword && (
+                    <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                  )}
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
               </Button>
@@ -807,7 +878,7 @@ const AuthModal = ({ onClose, onNavigate }) => {
 
             <div className="mt-6 text-center">
               <button
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={handleToggleMode}
                 className="text-indigo-600 dark:text-indigo-400 hover:underline"
               >
                 {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
