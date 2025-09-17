@@ -507,9 +507,30 @@ const LandingPage = ({ onNavigate }) => {
             <div>
               <h3 className="font-semibold text-white mb-4">Features</h3>
               <ul className="space-y-2">
-                <li className="text-gray-400">ATS Resume Analyzer</li>
-                <li className="text-gray-400">Career Roadmap Generator</li>
-                <li className="text-gray-400">Interview Readiness Gauge</li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('resume-analyzer-service')}
+                    className="text-gray-400 hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    ATS Resume Analyzer
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('roadmap-service')}
+                    className="text-gray-400 hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Career Roadmap Generator
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => onNavigate('interview-service')}
+                    className="text-gray-400 hover:text-indigo-400 transition-colors cursor-pointer"
+                  >
+                    Interview Readiness Gauge
+                  </button>
+                </li>
               </ul>
             </div>
             
@@ -679,11 +700,11 @@ const AboutPage = ({ onNavigate }) => (
 
 const AuthModal = ({ onClose, onNavigate }) => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [username, setUsername] = useState('');
-  const [identifier, setIdentifier] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
@@ -692,11 +713,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
   const { setUser } = useAppStore();
 
   const clearForm = () => {
-    setUsername('');
-    setIdentifier('');
     setEmail('');
     setPassword('');
     setConfirmPassword('');
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setErrors({});
   };
 
@@ -708,17 +729,14 @@ const AuthModal = ({ onClose, onNavigate }) => {
   const validateForm = () => {
     const newErrors = {};
     
+    if (!email.trim()) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+    if (!password) newErrors.password = 'Password is required';
+    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    
     if (isSignUp) {
-      if (!username.trim()) newErrors.username = 'Username is required';
-      if (!email.trim()) newErrors.email = 'Email is required';
-      else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
-      if (!password) newErrors.password = 'Password is required';
-      else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
       if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
       else if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    } else {
-      if (!identifier.trim()) newErrors.identifier = 'Username or email is required';
-      if (!password) newErrors.password = 'Password is required';
     }
     
     setErrors(newErrors);
@@ -741,10 +759,10 @@ const AuthModal = ({ onClose, onNavigate }) => {
       
       let response;
       if (isSignUp) {
-        response = await authService.register({ username, email, password });
+        response = await authService.register({ email, password });
         setToastMessage('Account created successfully!');
       } else {
-        response = await authService.login({ identifier, password });
+        response = await authService.login({ email, password });
         setToastMessage('Login successful!');
       }
       
@@ -786,83 +804,86 @@ const AuthModal = ({ onClose, onNavigate }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {isSignUp ? (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Username
-                    </label>
-                    <Input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="your_username"
-                      className={errors.username ? 'border-red-500' : ''}
-                    />
-                    {errors.username && (
-                      <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Email
-                    </label>
-                    <Input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className={errors.email ? 'border-red-500' : ''}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Username or Email
-                  </label>
-                  <Input
-                    type="text"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="username or you@example.com"
-                    className={errors.identifier ? 'border-red-500' : ''}
-                  />
-                  {errors.identifier && (
-                    <p className="text-red-500 text-sm mt-1">{errors.identifier}</p>
-                  )}
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email
+                </label>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={errors.email ? 'border-red-500' : ''}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Password
                 </label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className={errors.password ? 'border-red-500' : ''}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    {showPassword ? (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
               </div>
+              
               {isSignUp && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Confirm Password
                   </label>
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={errors.confirmPassword ? 'border-red-500' : ''}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={`pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      {showConfirmPassword ? (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                   )}

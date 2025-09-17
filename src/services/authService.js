@@ -20,22 +20,22 @@ async function handleResponse(res) {
   return data;
 }
 
-export async function register({ username, email, password }) {
+export async function register({ email, password }) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ username, email, password })
+    body: JSON.stringify({ email, password })
   });
   const data = await handleResponse(res);
   if (data?.access_token) localStorage.setItem(TOKEN_KEY, data.access_token);
   return data;
 }
 
-export async function login({ identifier, password }) {
+export async function login({ email, password }) {
   const res = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ identifier, password })
+    body: JSON.stringify({ email, password })
   });
   const data = await handleResponse(res);
   if (data?.access_token) localStorage.setItem(TOKEN_KEY, data.access_token);

@@ -4,12 +4,11 @@ from datetime import datetime
 
 # User Schemas
 class UserCreate(BaseModel):
-    username: str
     email: EmailStr
     password: str
 
 class UserLogin(BaseModel):
-    identifier: str  # username or email
+    email: EmailStr
     password: str
 
 class UserResponse(BaseModel):
