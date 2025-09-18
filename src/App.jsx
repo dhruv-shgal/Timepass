@@ -732,7 +732,19 @@ const AuthModal = ({ onClose, onNavigate }) => {
     if (!email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
     if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    else if (password.length < 12) newErrors.password = 'Password must be at least 12 characters';
+    else {
+      // Check password requirements
+      const hasUppercase = /[A-Z]/.test(password);
+      const hasLowercase = /[a-z]/.test(password);
+      const hasDigit = /\d/.test(password);
+      const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>\/?`~]/.test(password);
+      
+      if (!hasUppercase) newErrors.password = 'Password must contain at least one uppercase letter';
+      else if (!hasLowercase) newErrors.password = 'Password must contain at least one lowercase letter';
+      else if (!hasDigit) newErrors.password = 'Password must contain at least one digit';
+      else if (!hasSpecial) newErrors.password = 'Password must contain at least one special character';
+    }
     
     if (isSignUp) {
       if (!confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
@@ -778,7 +790,9 @@ const AuthModal = ({ onClose, onNavigate }) => {
       }, 2000);
     } catch (error) {
       setToastType('error');
-      setToastMessage(error.message || 'Invalid credentials');
+      // Ensure we display a proper error message
+      const errorMessage = error?.message || error?.toString() || 'Invalid credentials';
+      setToastMessage(errorMessage);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } finally {
@@ -851,6 +865,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
                 </div>
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
+                {isSignUp && !errors.password && (
+                  <p className="text-gray-500 text-xs mt-1">
+                    Password must be 12+ characters with uppercase, lowercase, digit, and special character (!@#$%^&*)
+                  </p>
                 )}
               </div>
               

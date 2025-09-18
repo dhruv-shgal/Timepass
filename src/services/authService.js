@@ -14,7 +14,24 @@ function getHeaders(withAuth = false) {
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const message = data?.detail || data?.message || 'Request failed';
+    let message = 'Request failed';
+    
+    // Handle FastAPI validation errors
+    if (data?.detail) {
+      if (Array.isArray(data.detail)) {
+        // Multiple validation errors
+        message = data.detail.map(err => err.msg || err.message || err).join(', ');
+      } else if (typeof data.detail === 'string') {
+        // Single error message
+        message = data.detail;
+      } else if (typeof data.detail === 'object') {
+        // Error object
+        message = data.detail.message || data.detail.msg || JSON.stringify(data.detail);
+      }
+    } else if (data?.message) {
+      message = data.message;
+    }
+    
     throw new Error(message);
   }
   return data;
