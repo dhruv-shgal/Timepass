@@ -1,8 +1,7 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "python3 railway_start.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
@@ -10,4 +9,3 @@ restartPolicyMaxRetries = 10
 
 [deploy.variables]
 PORT = "8000"
-PYTHONPATH = "/app/backend"
