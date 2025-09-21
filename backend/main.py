@@ -42,5 +42,9 @@ def read_root():
 def health_check():
     return {"status": "healthy", "app": settings.APP_NAME}
 
+@app.get("/test")
+def test_endpoint():
+    return {"message": "Backend is working!", "timestamp": "2025-09-21"}
+
 
 
