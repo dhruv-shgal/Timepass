@@ -19,7 +19,10 @@ export const useOnboarding = () => {
 
     // Show onboarding if neither completed nor skipped
     if (!completed && !skipped) {
-      setShowOnboarding(true);
+      // Add a small delay for smooth transition
+      setTimeout(() => {
+        setShowOnboarding(true);
+      }, 1000);
     }
   }, []);
 

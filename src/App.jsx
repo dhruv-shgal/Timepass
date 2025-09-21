@@ -1595,8 +1595,9 @@ const LineAnalyzer = () => {
   );
 };
 
-const Settings = () => {
+const Settings = ({ onOpenOnboarding }) => {
   const { isDark, toggleTheme } = useTheme();
+  const { isCompleted } = useOnboarding();
 
   return (
     <div className="p-6">
@@ -1610,6 +1611,35 @@ const Settings = () => {
           <Card>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Profile</h3>
             <div className="space-y-4">
+              {!isCompleted && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-700 rounded-lg p-4 mb-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-indigo-900 dark:text-indigo-100">Complete Your Profile</h4>
+                        <p className="text-xs text-indigo-700 dark:text-indigo-300">Add your skills, experience, and preferences</p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={onOpenOnboarding}
+                      variant="primary"
+                      size="sm"
+                      className="bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      Complete Profile
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Full Name
@@ -1684,7 +1714,7 @@ const AppShell = ({ currentPage, onNavigate, onOpenOnboarding }) => {
       case 'resume-analyzer': return <ResumeAnalyzer />;
       case 'career-roadmap': return <CareerRoadmap />;
       case 'line-analyzer': return <LineAnalyzer />;
-      case 'settings': return <Settings />;
+      case 'settings': return <Settings onOpenOnboarding={onOpenOnboarding} />;
       default: return <Dashboard onNavigate={onNavigate} onOpenOnboarding={onOpenOnboarding} />;
     }
   };
@@ -1849,17 +1879,23 @@ const App = () => {
       <AppProvider>
         <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
           {showNavbar && <Navbar onNavigate={handleNavigate} currentPage={currentPage} onOpenAuth={() => setShowAuth(true)} onOpenOnboarding={openOnboarding} />}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentPage}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderCurrentPage()}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: showOnboarding ? 0.3 : 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentPage}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {renderCurrentPage()}
+              </motion.div>
+            </AnimatePresence>
+          </motion.div>
           {showAuth && (
             <AuthModal onClose={() => setShowAuth(false)} onNavigate={handleNavigate} />)
           }
