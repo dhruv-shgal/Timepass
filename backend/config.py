@@ -24,10 +24,14 @@ class Settings:
     
     @property
     def database_url(self) -> str:
-        # Use DATABASE_URL if provided (Railway), otherwise use SQLite for development
+        # Use DATABASE_URL if provided (Railway, Heroku, etc.)
         if os.getenv("DATABASE_URL"):
             return os.getenv("DATABASE_URL")
-        # Use SQLite for local development
-        return "sqlite:///./ai_career_toolkit.db"
+        
+        # Build database URL from individual components
+        if self.DB_PASSWORD:
+            return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        else:
+            return f"mysql+pymysql://{self.DB_USER}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 settings = Settings()

@@ -6,26 +6,12 @@ from routes import auth_routes, profile_routes, resume_routes, interview_routes
 import logging
 import sys
 
-# Fix for Python 3.13 logging issue
-class SafeStreamHandler(logging.StreamHandler):
-    def flush(self):
-        try:
-            super().flush()
-        except (OSError, ValueError):
-            pass
-
-# Configure logging to avoid the error
-root_logger = logging.getLogger()
-for handler in root_logger.handlers[:]:
-    if isinstance(handler, logging.StreamHandler):
-        root_logger.removeHandler(handler)
-
-handler = SafeStreamHandler(sys.stdout)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-root_logger.addHandler(handler)
-root_logger.setLevel(logging.INFO)
+# Configure logging for Python 3.13 compatibility
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 # Create tables automatically
 Base.metadata.create_all(bind=engine)

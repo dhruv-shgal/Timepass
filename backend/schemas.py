@@ -12,8 +12,22 @@ SPECIAL_CHAR_REGEX = re.compile(r'[!@#$%^&*()_+\-=\[\]{};:"\\|,.<>/?`~]')
 
 # User Schemas
 class UserCreate(BaseModel):
+    username: str
     email: EmailStr
     password: str
+
+    @field_validator('username')
+    @classmethod
+    def username_validation(cls, value):
+        if not value or len(value.strip()) == 0:
+            raise ValueError('Username is required')
+        if len(value) < 3:
+            raise ValueError('Username must be at least 3 characters long')
+        if len(value) > 20:
+            raise ValueError('Username must be no more than 20 characters long')
+        if not re.match(r'^[a-zA-Z0-9_]+$', value):
+            raise ValueError('Username can only contain letters, numbers, and underscores')
+        return value.strip()
 
     @field_validator('password')
     @classmethod
@@ -32,7 +46,7 @@ class UserCreate(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    login: str  # Can be either username or email
     password: str
 
 class UserResponse(BaseModel):

@@ -8,17 +8,23 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 @router.post("/register", response_model=schemas.Token)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """Register new user"""
-    # Check if user exists via email
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_user:
+    # Check if user exists with either email or username
+    db_user_email = db.query(models.User).filter(models.User.email == user.email).first()
+    db_user_username = db.query(models.User).filter(models.User.username == user.username).first()
+    
+    if db_user_email or db_user_username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="User already registered"
         )
     
     # Hash password and create user
     hashed_password = auth.hash_password(user.password)
-    db_user = models.User(email=user.email, password_hash=hashed_password)
+    db_user = models.User(
+        username=user.username,
+        email=user.email, 
+        password_hash=hashed_password
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -39,9 +45,16 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=schemas.Token)
 def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
-    """Login user"""
-    # Login via email only
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    """Login user with username or email"""
+    # Check if login is email or username
+    is_email = "@" in user.login
+    
+    if is_email:
+        # Login via email
+        db_user = db.query(models.User).filter(models.User.email == user.login).first()
+    else:
+        # Login via username
+        db_user = db.query(models.User).filter(models.User.username == user.login).first()
     
     if not db_user or not auth.verify_password(user.password, db_user.password_hash):
         raise HTTPException(

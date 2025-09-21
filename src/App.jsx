@@ -4,6 +4,8 @@ import ResumeAnalyzerService from './ResumeAnalyzerService';
 import CareerRoadmapService from './CareerRoadmapService';
 import InterviewReadinessService from './InterviewReadinessService';
 import { AppProvider, useAppStore } from './AppContext';
+import OnboardingForm from './components/OnboardingForm';
+import { useOnboarding } from './hooks/useOnboarding';
 
 // Theme Context
 const ThemeContext = createContext();
@@ -181,9 +183,10 @@ const Textarea = ({ className = '', ...props }) => (
 );
 
 // Navigation Components
-const Navbar = ({ onNavigate, currentPage, onOpenAuth }) => {
+const Navbar = ({ onNavigate, currentPage, onOpenAuth, onOpenOnboarding }) => {
   const { isDark, toggleTheme } = useTheme();
   const { user, setUser } = useAppStore();
+  const { isCompleted } = useOnboarding();
   
   return (
     <motion.nav
@@ -213,6 +216,15 @@ const Navbar = ({ onNavigate, currentPage, onOpenAuth }) => {
             
             {user ? (
               <>
+                {!isCompleted && onOpenOnboarding && (
+                  <Button 
+                    onClick={onOpenOnboarding}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Complete Your Profile
+                  </Button>
+                )}
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
                     {(user.username || user.email).substring(0, 2).toUpperCase()}
@@ -700,6 +712,7 @@ const AboutPage = ({ onNavigate }) => (
 
 const AuthModal = ({ onClose, onNavigate }) => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -713,6 +726,7 @@ const AuthModal = ({ onClose, onNavigate }) => {
   const { setUser } = useAppStore();
 
   const clearForm = () => {
+    setUsername('');
     setEmail('');
     setPassword('');
     setConfirmPassword('');
@@ -729,8 +743,17 @@ const AuthModal = ({ onClose, onNavigate }) => {
   const validateForm = () => {
     const newErrors = {};
     
+    if (isSignUp) {
+      // Username validation for signup
+      if (!username.trim()) newErrors.username = 'Username is required';
+      else if (username.length < 3) newErrors.username = 'Username must be at least 3 characters long';
+      else if (username.length > 20) newErrors.username = 'Username must be no more than 20 characters long';
+      else if (!/^[a-zA-Z0-9_]+$/.test(username)) newErrors.username = 'Username can only contain letters, numbers, and underscores';
+    }
+    
     if (!email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Email is invalid';
+    
     if (!password) newErrors.password = 'Password is required';
     else if (password.length < 12) newErrors.password = 'Password must be at least 12 characters';
     else {
@@ -771,10 +794,11 @@ const AuthModal = ({ onClose, onNavigate }) => {
       
       let response;
       if (isSignUp) {
-        response = await authService.register({ email, password });
+        response = await authService.register({ username, email, password });
         setToastMessage('Account created successfully!');
       } else {
-        response = await authService.login({ email, password });
+        // For login, use email as the login field (can be username or email)
+        response = await authService.login({ login: email, password });
         setToastMessage('Login successful!');
       }
       
@@ -818,15 +842,38 @@ const AuthModal = ({ onClose, onNavigate }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Username
+                  </label>
+                  <Input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="johndoe123"
+                    className={errors.username ? 'border-red-500' : ''}
+                  />
+                  {errors.username && (
+                    <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                  )}
+                  {!errors.username && (
+                    <p className="text-gray-500 text-xs mt-1">
+                      3-20 characters, letters, numbers, and underscores only
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email
+                  {isSignUp ? 'Email' : 'Email or Username'}
                 </label>
                 <Input
-                  type="email"
+                  type={isSignUp ? "email" : "text"}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={isSignUp ? "you@example.com" : "you@example.com or username"}
                   className={errors.email ? 'border-red-500' : ''}
                 />
                 {errors.email && (
@@ -942,8 +989,9 @@ const AuthModal = ({ onClose, onNavigate }) => {
 };
 
 // App Components
-const Dashboard = ({ onNavigate }) => {
+const Dashboard = ({ onNavigate, onOpenOnboarding }) => {
   const { credits } = useAppStore();
+  const { isCompleted } = useOnboarding();
   const cards = [
     { title: 'Recent Uploads', value: '3', subtitle: 'Last 30 days' },
     { title: 'Avg. ATS Score', value: '68', subtitle: '+12 from last month' },
@@ -957,7 +1005,17 @@ const Dashboard = ({ onNavigate }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Dashboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          {!isCompleted && onOpenOnboarding && (
+            <Button 
+              onClick={onOpenOnboarding}
+              variant="outline"
+            >
+              Complete Your Profile
+            </Button>
+          )}
+        </div>
         
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {cards.map((card, i) => (
@@ -1616,18 +1674,18 @@ const Settings = () => {
 };
 
 // App Shell
-const AppShell = ({ currentPage, onNavigate }) => {
+const AppShell = ({ currentPage, onNavigate, onOpenOnboarding }) => {
   const { isDark, toggleTheme } = useTheme();
   const { user, setUser } = useAppStore();
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'dashboard': return <Dashboard onNavigate={onNavigate} />;
+      case 'dashboard': return <Dashboard onNavigate={onNavigate} onOpenOnboarding={onOpenOnboarding} />;
       case 'resume-analyzer': return <ResumeAnalyzer />;
       case 'career-roadmap': return <CareerRoadmap />;
       case 'line-analyzer': return <LineAnalyzer />;
       case 'settings': return <Settings />;
-      default: return <Dashboard onNavigate={onNavigate} />;
+      default: return <Dashboard onNavigate={onNavigate} onOpenOnboarding={onOpenOnboarding} />;
     }
   };
 
@@ -1719,6 +1777,15 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('landing');
   const [showAuth, setShowAuth] = useState(false);
   const { user, setUser } = useAppStore();
+  const { 
+    showOnboarding, 
+    onboardingData, 
+    isCompleted, 
+    handleComplete, 
+    handleSkip, 
+    openOnboarding, 
+    closeOnboarding 
+  } = useOnboarding();
   
   // Effect to check if user is already logged in
   useEffect(() => {
@@ -1769,7 +1836,7 @@ const App = () => {
       case 'career-roadmap':
       case 'line-analyzer':
       case 'settings':
-        return <AppShell currentPage={currentPage.startsWith('app') ? 'dashboard' : currentPage} onNavigate={handleNavigate} />;
+        return <AppShell currentPage={currentPage.startsWith('app') ? 'dashboard' : currentPage} onNavigate={handleNavigate} onOpenOnboarding={openOnboarding} />;
       default:
         return <NotFoundPage onNavigate={handleNavigate} />;
     }
@@ -1781,7 +1848,7 @@ const App = () => {
     <ThemeProvider>
       <AppProvider>
         <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen">
-          {showNavbar && <Navbar onNavigate={handleNavigate} currentPage={currentPage} onOpenAuth={() => setShowAuth(true)} />}
+          {showNavbar && <Navbar onNavigate={handleNavigate} currentPage={currentPage} onOpenAuth={() => setShowAuth(true)} onOpenOnboarding={openOnboarding} />}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPage}
@@ -1796,6 +1863,14 @@ const App = () => {
           {showAuth && (
             <AuthModal onClose={() => setShowAuth(false)} onNavigate={handleNavigate} />)
           }
+          {showOnboarding && (
+            <OnboardingForm 
+              isOpen={showOnboarding}
+              onClose={closeOnboarding}
+              onComplete={handleComplete}
+              onSkip={handleSkip}
+            />
+          )}
         </div>
       </AppProvider>
     </ThemeProvider>

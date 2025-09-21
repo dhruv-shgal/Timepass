@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ask for GitHub repo URL
-read -p "https://github.com/dhruv-shgal/KAREERIST.git:" repo_url
+read -p "https://github.com/dhruv-shgal/Timepass.git:" repo_url
 
 # Check if git is initialized
 if [ ! -d .git ]; then
