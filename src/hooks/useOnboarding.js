@@ -11,6 +11,8 @@ export const useOnboarding = () => {
     const skipped = localStorage.getItem('onboardingSkipped') === 'true';
     const data = localStorage.getItem('onboardingData');
 
+    console.log('Onboarding check:', { completed, skipped, data });
+
     setIsCompleted(completed);
     
     if (data) {
@@ -19,10 +21,14 @@ export const useOnboarding = () => {
 
     // Show onboarding if neither completed nor skipped
     if (!completed && !skipped) {
+      console.log('Showing onboarding in 1 second...');
       // Add a small delay for smooth transition
       setTimeout(() => {
+        console.log('Setting showOnboarding to true');
         setShowOnboarding(true);
       }, 1000);
+    } else {
+      console.log('Onboarding already completed or skipped');
     }
   }, []);
 
@@ -53,6 +59,12 @@ export const useOnboarding = () => {
     setShowOnboarding(true);
   };
 
+  // Add a test function to force show onboarding
+  const forceShowOnboarding = () => {
+    console.log('Force showing onboarding...');
+    setShowOnboarding(true);
+  };
+
   return {
     showOnboarding,
     onboardingData,
@@ -61,6 +73,7 @@ export const useOnboarding = () => {
     handleSkip,
     openOnboarding,
     closeOnboarding,
-    resetOnboarding
+    resetOnboarding,
+    forceShowOnboarding
   };
 };

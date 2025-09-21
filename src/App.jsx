@@ -1814,7 +1814,8 @@ const App = () => {
     handleComplete, 
     handleSkip, 
     openOnboarding, 
-    closeOnboarding 
+    closeOnboarding,
+    forceShowOnboarding
   } = useOnboarding();
   
   // Effect to check if user is already logged in
@@ -1906,6 +1907,28 @@ const App = () => {
               onComplete={handleComplete}
               onSkip={handleSkip}
             />
+          )}
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="fixed bottom-4 right-4 bg-black text-white p-2 text-xs rounded space-y-2">
+              <div>Onboarding: {showOnboarding ? 'SHOWING' : 'HIDDEN'}</div>
+              <div>Completed: {isCompleted ? 'YES' : 'NO'}</div>
+              <button 
+                onClick={forceShowOnboarding}
+                className="bg-blue-500 text-white px-2 py-1 rounded text-xs"
+              >
+                Force Show
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                className="bg-red-500 text-white px-2 py-1 rounded text-xs"
+              >
+                Clear & Reload
+              </button>
+            </div>
           )}
         </div>
       </AppProvider>
