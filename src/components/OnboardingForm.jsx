@@ -557,7 +557,7 @@ const OnboardingForm = ({ isOpen, onClose, onComplete, onSkip }) => {
               )}
             </Card>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
